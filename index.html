@@ -91,7 +91,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 /* Diese beiden Werte vor dem Hochladen selbst eintragen.
    Die Project URL ist bereits eingesetzt. Der Publishable Key bleibt privat bei dir. */
 const SUPABASE_URL = 'https://czbecwtzvzakusrvftmr.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'HIER_DEIN_PUBLISHABLE_KEY_EINFUEGEN';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable__y3MOo0Zn6JVA8R2tbJQ0A_MpqZgTOB';
 
 let supabaseClient = null;
 let currentUser = null;
@@ -292,7 +292,7 @@ async function loadProgress(user){
 }
 async function initCloud(){
   if(!window.supabase||!window.supabase.createClient){setStatus('Verbindung konnte nicht geladen werden. Bitte Seite neu laden.',true);return;}
-  if(SUPABASE_PUBLISHABLE_KEY==='HIER_DEIN_PUBLISHABLE_KEY_EINFUEGEN'||!SUPABASE_PUBLISHABLE_KEY.trim()){
+  if(SUPABASE_PUBLISHABLE_KEY==='sb_publishable__y3MOo0Zn6JVA8R2tbJQ0A_MpqZgTOB'||!SUPABASE_PUBLISHABLE_KEY.trim()){
     setStatus('Noch nicht verbunden: Trage zuerst deinen Publishable Key in index.html ein.',true);return;
   }
   supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
