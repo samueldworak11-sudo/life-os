@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LIFE OS – Football & Life Dashboard</title>
+<style>
+:root{--bg:#0b1020;--panel:#141c30;--panel2:#1b2740;--text:#edf3ff;--muted:#9eabc4;--line:#293650;--green:#5ee0a0;--blue:#7db4ff;--gold:#ffd166;--red:#ff8b8b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#1c3452 0,#0b1020 42%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1150px;margin:auto;padding:24px}header{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}.eyebrow{color:var(--green);font-weight:800;letter-spacing:.13em;font-size:11px}.title{font-size:clamp(28px,5vw,42px);font-weight:900;letter-spacing:-.04em;margin:3px 0}.sub{color:var(--muted)}.pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:linear-gradient(145deg,rgba(27,39,64,.96),rgba(18,27,46,.96));border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 12px 35px #0002}.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#0d1629;border:1px solid var(--line);border-radius:14px;padding:13px}.stat strong{display:block;font-size:25px}.stat small{color:var(--muted)}h2{font-size:18px;margin:0 0 13px}h3{font-size:14px;margin:16px 0 8px;color:#cbd8ef}
+.bar{height:10px;background:#0b1425;border-radius:99px;overflow:hidden;margin:10px 0}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#32bd82,#9af0bd);border-radius:99px;transition:width .2s}
+.task{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #ffffff10}.task:last-child{border:0}.task input{accent-color:var(--green);width:18px;height:18px;margin-top:3px;flex:none}.task label{flex:1;cursor:pointer}.task.done label{text-decoration:line-through;color:var(--muted)}.pts{color:var(--green);font-weight:800;font-size:12px;white-space:nowrap}
+.muted{color:var(--muted);font-size:13px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.btn{border:1px solid var(--line);background:#22324e;color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:700}.btn:hover{filter:brightness(1.15)}.btn.primary{background:#176b4b;border-color:#23875f}.btn.warn{background:#593c25}.btn:disabled{opacity:.55;cursor:not-allowed}
+.reward{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid #ffffff10}.reward:last-child{border:0}.reward button:disabled{opacity:.4;cursor:not-allowed}.tag{font-size:11px;color:var(--blue);border:1px solid #35547d;border-radius:999px;padding:3px 8px}.notice{background:#332b1d;border:1px solid #66512a;color:#ffe2a0;padding:12px 14px;border-radius:13px;font-size:13px;margin-top:12px}.green{color:var(--green)}.gold{color:var(--gold)}.footer{color:var(--muted);font-size:12px;text-align:center;padding:24px 0}.auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{width:100%;background:#0d1629;border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--text);font:inherit}.auth-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.sync-status{font-size:12px;color:var(--muted);margin-top:10px;min-height:18px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+
+.workout-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.workout-tabs button[aria-pressed="true"]{background:#176b4b;border-color:#23875f}
+.workout-item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #ffffff10}
+.workout-item:last-child{border:0}
+.workout-item input{accent-color:var(--green);width:18px;height:18px;margin-top:3px;flex:none}
+.workout-item label{flex:1}
+.workout-meta{color:var(--muted);font-size:12px}
+@media(max-width:760px){.span-8,.span-6,.span-4{grid-column:span 12}.stats{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start;flex-direction:column}.wrap{padding:15px}.auth-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header><div><div class="eyebrow">PLAYER DEVELOPMENT SYSTEM</div><div class="title">LIFE <span class="green">OS</span></div><div class="sub">Dein Alltag. Deine Entwicklung. Dein Weg Richtung NLZ.</div></div><div class="pill" id="today"></div></header>
+
+<section class="card span-12" style="margin-bottom:14px">
+  <div class="row"><div><div class="eyebrow">CLOUD SYNC</div><h2 style="margin:3px 0">Dein Spielstand auf allen Geräten</h2></div><span class="tag" id="authState">Nicht angemeldet</span></div>
+  <p class="muted">Melde dich mit derselben E-Mail-Adresse auf Handy und PC an. Dein Fortschritt wird dann synchronisiert.</p>
+  <div id="authForm">
+    <div class="auth-grid">
+      <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="Deine E-Mail-Adresse">
+      <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Passwort (mindestens 6 Zeichen)">
+    </div>
+    <div class="auth-actions">
+      <button class="btn primary" id="signInBtn">Anmelden</button>
+      <button class="btn" id="signUpBtn">Konto erstellen</button>
+    </div>
+  </div>
+  <div id="signedInPanel" hidden>
+    <div class="row"><span class="muted" id="signedInEmail"></span><button class="btn" id="signOutBtn">Abmelden</button></div>
+  </div>
+  <div class="sync-status" id="syncStatus" role="status" aria-live="polite">Lokale Speicherung aktiv. Für geräteübergreifende Synchronisierung bitte anmelden.</div>
+</section>
+
+<section class="grid">
+<div class="card span-12"><div class="row"><div><div class="eyebrow">PLAYER PROFILE</div><h2 style="font-size:23px;margin:3px 0">Football & Life Development</h2><div class="muted">Konstanz schlägt Perfektion. Erholung gehört zum Training.</div></div><span class="tag" id="levelName">LEVEL 1 · ROOKIE</span></div><div class="stats" style="margin-top:16px"><div class="stat"><strong id="xpTotal">0</strong><small>Gesamt-XP</small></div><div class="stat"><strong id="level">1</strong><small>Level</small></div><div class="stat"><strong id="todayXp">0</strong><small>XP heute</small></div><div class="stat"><strong id="streak">0</strong><small>Aktive Tage</small></div></div><div class="row" style="margin-top:16px"><b id="nextLevel">0 / 100 XP bis Level 2</b><span class="muted" id="percent">0%</span></div><div class="bar"><i id="levelBar"></i></div></div>
+
+<div class="card span-8"><div class="row"><h2>✓ Deine Tagesquests</h2><span class="tag" id="questCount">0 / 0 erledigt</span></div><div class="muted" style="margin-bottom:12px">Hake ab, was du wirklich erledigt hast. Aufgaben sind Vorschläge und dürfen an deinen Stundenplan angepasst werden.</div><div class="row"><label class="muted"><input type="checkbox" id="trainingDay" style="accent-color:var(--green)"> Heute ist Fußballtraining</label><button class="btn" id="resetDay">Tag zurücksetzen</button></div><div id="tasks"></div><div class="bar"><i id="dayBar"></i></div><div class="row"><span class="muted" id="dayProgress">0 % geschafft</span><b class="green" id="earnedToday">+0 XP</b></div></div>
+
+<div class="card span-4"><h2>🎯 Wochenfokus</h2><div class="muted">Deine drei wichtigsten Prioritäten</div><div class="task"><span>01</span><label>Schule zuverlässig erledigen</label></div><div class="task"><span>02</span><label>Bei jedem Fußballtraining aufmerksam lernen</label></div><div class="task"><span>03</span><label>Erholung und Schlaf ernst nehmen</label></div><div class="notice">Plane zusätzliche Einheiten nur mit deinem Trainer und ausreichend Erholung.</div></div>
+
+
+<div class="card span-12" id="workoutCenter">
+  <div class="row"><div><div class="eyebrow">ATHLETIC DEVELOPMENT</div><h2 style="font-size:22px;margin:3px 0">🏋️ Workout Center</h2><div class="muted">Ergänzung zum Mannschaftstraining – Qualität vor Menge.</div></div><span class="tag" id="workoutCount">0 Einheiten erledigt</span></div>
+  <div class="stats" style="margin-top:14px">
+    <div class="stat"><strong id="workoutSessions">0</strong><small>Einheiten erledigt</small></div>
+    <div class="stat"><strong id="workoutMinutes">0</strong><small>Minuten protokolliert</small></div>
+    <div class="stat"><strong id="workoutXp">0</strong><small>Workout-XP</small></div>
+    <div class="stat"><strong id="workoutWeek">0</strong><small>Diese Woche</small></div>
+  </div>
+  <div class="workout-tabs" role="group" aria-label="Workout auswählen">
+    <button class="btn" type="button" data-workout="strength" aria-pressed="true">Kraft & Stabilität</button>
+    <button class="btn" type="button" data-workout="mobility" aria-pressed="false">Mobility</button>
+    <button class="btn" type="button" data-workout="speed" aria-pressed="false">Koordination</button>
+    <button class="btn" type="button" data-workout="recovery" aria-pressed="false">Regeneration</button>
+  </div>
+  <div class="row"><h3 id="workoutTitle" style="margin:0">Kraft & Stabilität</h3><span class="tag" id="workoutDuration">ca. 20 Minuten</span></div>
+  <p class="muted" id="workoutDescription">Eine kurze, kontrollierte Ergänzung. Beende jede Übung mit guter Technik und ohne Schmerzen.</p>
+  <div id="workoutExercises"></div>
+  <div class="row" style="margin-top:12px;flex-wrap:wrap"><span class="muted" id="workoutProgress">0 / 5 Übungen erledigt</span><button class="btn primary" id="completeWorkout" type="button">Einheit abschließen</button></div>
+  <div class="notice">Wichtig: Mannschaftstraining zählt bereits als Belastung. Nutze zusätzliche Workouts nur, wenn du dich erholt fühlst und sie mit deinem Trainer abgestimmt sind. Bei Schmerzen, Krankheit oder starker Müdigkeit pausieren. Ruhetage sind Teil des Fortschritts.</div>
+  <h3>Dein Trainingsverlauf</h3><div id="workoutHistory" class="muted">Noch keine zusätzlichen Einheiten protokolliert.</div>
+</div>
+
+<div class="card span-6"><h2>🏆 Belohnungsshop</h2><div class="muted">Gib XP für freiwillige Extras aus. Schlaf, Essen und Pausen kosten niemals Punkte.</div><div id="rewards"></div></div>
+<div class="card span-6"><h2>📊 Dein Wochen-Check</h2><div class="stats"><div class="stat"><strong id="weekDone">0</strong><small>Quests erledigt</small></div><div class="stat"><strong id="weekXp">0</strong><small>XP diese Woche</small></div></div><h3>Kurze Reflexion</h3><textarea id="reflection" rows="4" placeholder="Was lief diese Woche gut? Was möchtest du nächste Woche verbessern?" style="width:100%;resize:vertical;background:#0d1629;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--text)"></textarea><div class="row" style="margin-top:8px"><span class="muted">Wird mit deinem Konto synchronisiert.</span><button class="btn primary" id="saveReflection">Speichern</button></div></div>
+
+<div class="card span-12"><h2>🗓️ Dein Tagesrahmen</h2><div class="grid"><div class="span-4"><h3>Morgen</h3><div class="muted">06:15 Aufstehen · Frühstück · fertig machen · Schultasche checken</div></div><div class="span-4"><h3>Schule & Nachmittag</h3><div class="muted">08:00–14:30 Schule · Essen · Lernen/Hausaufgaben · Training oder Erholung</div></div><div class="span-4"><h3>Abend</h3><div class="muted">Nach Hause kommen · Abendessen · Hund/Familie · Tasche vorbereiten · runterfahren</div></div></div><div class="notice"><b>Schlaf-Upgrade:</b> Bei 06:15 Uhr Aufstehen wäre etwa 21:15 Uhr eine passende Zielzeit für 9 Stunden Schlaf. Verschiebe deine Abendroutine schrittweise und besprich einen realistischen Trainings- und Schlafplan mit deiner Familie.</div></div>
+</section>
+<div class="footer">LIFE OS · Fortschritt ohne Druck · Mit Anmeldung wird dein Spielstand geräteübergreifend gespeichert.</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Diese beiden Werte vor dem Hochladen selbst eintragen.
+   Die Project URL ist bereits eingesetzt. Der Publishable Key bleibt privat bei dir. */
+const SUPABASE_URL = 'https://czbecwtzvzakusrvftmr.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'HIER_DEIN_PUBLISHABLE_KEY_EINFUEGEN';
+
+let supabaseClient = null;
+let currentUser = null;
+let syncReady = false;
+let syncTimer = null;
+let applyingRemote = false;
+
+const baseTasks=[
+{cat:'SCHULE',name:'Hausaufgaben und Lernen (ca. 1 Stunde)',xp:15},
+{cat:'SCHULE',name:'Schultasche und Materialien für morgen vorbereiten',xp:5},
+{cat:'ORDNUNG & HAUSHALT',name:'Zimmer 10 Minuten aufräumen',xp:8},
+{cat:'ORDNUNG & HAUSHALT',name:'Eine kleine Haushaltshilfe übernehmen',xp:8},
+{cat:'HUND & FAMILIE',name:'Hund versorgen (Futter, Wasser oder vereinbarte Aufgabe)',xp:8},
+{cat:'HUND & FAMILIE',name:'Bewusst Zeit mit Familie verbringen / helfen',xp:8},
+{cat:'GLAUBE',name:'Bibel lesen oder Gebetszeit',xp:8},
+{cat:'GESUNDHEIT',name:'Regelmäßig trinken und ausreichend essen',xp:5},
+{cat:'GESUNDHEIT',name:'Abendroutine starten und rechtzeitig zur Ruhe kommen',xp:10},
+{cat:'FOOTBALL',name:'Im Mannschaftstraining konzentriert arbeiten',xp:20,training:true},
+{cat:'FOOTBALL',name:'Nach dem Training kurz reflektieren: Was habe ich gelernt?',xp:5,training:true},
+{cat:'FOOTBALL',name:'Erholungstag respektieren: kein Extra-Workout erzwingen',xp:10,rest:true}
+];
+const rewardList=[{name:'30 Minuten Gaming extra',cost:100},{name:'Film- oder Serienabend',cost:150},{name:'Lieblingsessen aussuchen',cost:200},{name:'Kleines Fußball-Extra',cost:400},{name:'Größerer Ausflug / Wunsch',cost:900}];
+const today=new Date(), keyDate=today.toLocaleDateString('en-CA');
+document.getElementById('today').textContent=today.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+let data={xp:0,day:keyDate,done:{},training:false,activeDays:[],spent:0,weekDone:0,weekXp:0,reflection:'',workoutLog:[],workoutChecks:{}};
+try{const saved=JSON.parse(localStorage.getItem('lifeOSv1')||'null');if(saved)data={...data,...saved};}catch(e){}
+if(data.day!==keyDate){data.day=keyDate;data.done={};data.training=false;data.dayStartXp=data.xp;}
+if(data.dayStartXp==null)data.dayStartXp=data.xp;
+if(!Array.isArray(data.activeDays))data.activeDays=[];
+const tasksEl=document.getElementById('tasks');
+
+function setStatus(message,isError=false){const el=document.getElementById('syncStatus');el.textContent=message;el.style.color=isError?'var(--red)':'var(--muted)';}
+function save(){
+  localStorage.setItem('lifeOSv1',JSON.stringify(data));
+  if(currentUser&&syncReady&&!applyingRemote){
+    clearTimeout(syncTimer);
+    setStatus('Änderungen werden synchronisiert …');
+    syncTimer=setTimeout(uploadProgress,700);
+  }
+}
+async function uploadProgress(){
+  if(!currentUser||!syncReady||!supabaseClient)return;
+  const snapshot=JSON.parse(JSON.stringify(data));
+  const {error}=await supabaseClient.from('life_os_progress').upsert({
+    user_id:currentUser.id,progress:snapshot,updated_at:new Date().toISOString()
+  },{onConflict:'user_id'});
+  if(error){console.error(error);setStatus('Synchronisierung fehlgeschlagen: '+error.message,true);}
+  else setStatus('✓ Synchronisiert · '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+}
+function taskList(){
+  tasksEl.innerHTML='';
+  let list=baseTasks.filter(t=>t.training?data.training:!t.training).filter(t=>t.rest?!data.training:!t.rest),current='';
+  list.forEach(t=>{
+    if(t.cat!==current){current=t.cat;const h=document.createElement('h3');h.textContent=current;tasksEl.appendChild(h);}
+    const id=baseTasks.indexOf(t),row=document.createElement('div');row.className='task'+(data.done[id]?' done':'');
+    const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!data.done[id];
+    cb.addEventListener('change',()=>{data.done[id]=cb.checked;data.xp=Math.max(0,data.xp+(cb.checked?t.xp:-t.xp));if(cb.checked){data.weekDone=(data.weekDone||0)+1;data.weekXp=(data.weekXp||0)+t.xp;if(!data.activeDays.includes(keyDate))data.activeDays.push(keyDate);}else{data.weekDone=Math.max(0,(data.weekDone||0)-1);data.weekXp=Math.max(0,(data.weekXp||0)-t.xp);}save();render();renderRewards();renderWorkout();});
+    const label=document.createElement('label');label.textContent=t.name;const pts=document.createElement('span');pts.className='pts';pts.textContent='+'+t.xp+' XP';row.append(cb,label,pts);tasksEl.appendChild(row);
+  });
+}
+function render(){
+  taskList();
+  let list=baseTasks.filter(t=>t.training?data.training:!t.training).filter(t=>t.rest?!data.training:!t.rest);
+  let done=list.filter(t=>data.done[baseTasks.indexOf(t)]).length,xp=list.reduce((s,t)=>s+(data.done[baseTasks.indexOf(t)]?t.xp:0),0),pct=list.length?Math.round(done/list.length*100):0;
+  document.getElementById('questCount').textContent=done+' / '+list.length+' erledigt';
+  document.getElementById('dayBar').style.width=pct+'%';document.getElementById('dayProgress').textContent=pct+' % geschafft';
+  document.getElementById('earnedToday').textContent='+'+xp+' XP';document.getElementById('todayXp').textContent=xp;
+  document.getElementById('xpTotal').textContent=data.xp;
+  let levels=[0,100,250,450,700,1000,1400,1850,2350,3000,3800],lv=1;
+  for(let i=1;i<levels.length;i++)if(data.xp>=levels[i])lv=i+1;
+  let floor=levels[Math.min(lv-1,levels.length-1)],ceil=levels[Math.min(lv,levels.length-1)];if(lv>=10){floor=3800;ceil=5000;}
+  let progress=Math.max(0,Math.min(100,Math.round((data.xp-floor)/(ceil-floor)*100)));
+  document.getElementById('level').textContent=lv;
+  document.getElementById('levelName').textContent='LEVEL '+lv+' · '+(['ROOKIE','STARTER','GRINDER','BUILDER','RISING STAR','PROSPECT','ACADEMY','ELITE','CHAMPION','LEGEND'][lv-1]||'LEGEND');
+  document.getElementById('nextLevel').textContent=data.xp+' / '+ceil+' XP bis Level '+(lv+1);
+  document.getElementById('percent').textContent=progress+'%';document.getElementById('levelBar').style.width=progress+'%';
+  document.getElementById('streak').textContent=data.activeDays.length;
+  document.getElementById('weekDone').textContent=data.weekDone||0;document.getElementById('weekXp').textContent=data.weekXp||0;
+  document.getElementById('trainingDay').checked=!!data.training;document.getElementById('reflection').value=data.reflection||'';
+}
+function renderRewards(){
+  const el=document.getElementById('rewards');el.innerHTML='';
+  rewardList.forEach(r=>{
+    const row=document.createElement('div');row.className='reward';const info=document.createElement('div');
+    const bname=document.createElement('b');bname.textContent=r.name;const cost=document.createElement('div');cost.className='muted';cost.textContent=r.cost+' XP';info.append(bname,cost);
+    const b=document.createElement('button');b.className='btn '+(data.xp>=r.cost?'primary':'');b.textContent='Einlösen';b.disabled=data.xp<r.cost;
+    b.addEventListener('click',()=>{if(data.xp>=r.cost&&confirm('Möchtest du „'+r.name+'“ für '+r.cost+' XP einlösen?')){data.xp-=r.cost;data.spent=(data.spent||0)+r.cost;save();render();renderRewards();}});
+    row.append(info,b);el.appendChild(row);
+  });
+}
+document.getElementById('trainingDay').addEventListener('change',e=>{data.training=e.target.checked;save();render();});
+document.getElementById('resetDay').addEventListener('click',()=>{if(confirm('Alle Häkchen für heute zurücksetzen? Bereits verdiente XP werden dabei abgezogen.')){Object.keys(data.done).forEach(k=>{let t=baseTasks[+k];if(t&&data.done[k])data.xp=Math.max(0,data.xp-t.xp);});data.done={};save();render();renderRewards();}});
+document.getElementById('saveReflection').addEventListener('click',()=>{data.reflection=document.getElementById('reflection').value;save();setStatus(currentUser?'Wochenreflexion wird synchronisiert …':'Wochenreflexion lokal gespeichert. Melde dich an, um sie auf allen Geräten zu sehen.');});
+
+const workoutPlans={
+ strength:{title:'Kraft & Stabilität',duration:20,description:'Kontrollierte Grundübungen. Wähle eine leichte, saubere Variante und mache Pausen nach Bedarf.',items:[
+  ['Kniebeugen zum Stuhl','2 × 8 ruhige Wiederholungen'],
+  ['Liegestütze an der Wand oder erhöht','2 × 6–8 Wiederholungen'],
+  ['Glute Bridge','2 × 10 Wiederholungen'],
+  ['Bird Dog','2 × 6 je Seite'],
+  ['Wadenheben','2 × 10 Wiederholungen']
+ ]},
+ mobility:{title:'Mobility',duration:12,description:'Sanfte Beweglichkeit ohne in Schmerzen oder starkes Ziehen hineinzudrücken.',items:[
+  ['Sprunggelenk-Mobilisation','1–2 Minuten je Seite'],
+  ['Hüftkreisen','8 langsame Kreise je Richtung'],
+  ['Dynamische Ausfallschritt-Bewegung','6 je Seite, kleiner Bewegungsradius'],
+  ['Brustwirbelsäule drehen','6 je Seite'],
+  ['Lockeres Ausschütteln','1–2 Minuten']
+ ]},
+ speed:{title:'Koordination',duration:12,description:'Leichte Fußarbeit mit ausreichend Pause. Keine maximalen Sprints als Zusatzbelastung.',items:[
+  ['Locker auf der Stelle marschieren','1 Minute'],
+  ['Seitliche Schritte','3 × 15 Sekunden, dazwischen Pause'],
+  ['Einbeinstand nahe einer Wand','2 × 20 Sekunden je Seite'],
+  ['Langsame Richtungswechsel','3 × 15 Sekunden'],
+  ['Locker auslaufen oder gehen','2 Minuten']
+ ]},
+ recovery:{title:'Regeneration',duration:10,description:'Ein ruhiger Erholungstag ist wertvoll. Alles bleibt angenehm und entspannt.',items:[
+  ['Ruhiger Spaziergang','5 Minuten, wenn es angenehm ist'],
+  ['Sanfte Schulterkreise','30 Sekunden'],
+  ['Lockere Sprunggelenkbewegung','30 Sekunden je Seite'],
+  ['Ruhig atmen und entspannen','2 Minuten']
+ ]}
+};
+let activeWorkout='strength';
+function renderWorkout(){
+ const plan=workoutPlans[activeWorkout], host=document.getElementById('workoutExercises');
+ document.querySelectorAll('[data-workout]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.workout===activeWorkout)));
+ document.getElementById('workoutTitle').textContent=plan.title;
+ document.getElementById('workoutDuration').textContent='ca. '+plan.duration+' Minuten';
+ document.getElementById('workoutDescription').textContent=plan.description;
+ host.innerHTML='';
+ let checks=data.workoutChecks[activeWorkout]||{};
+ plan.items.forEach((item,i)=>{
+  const row=document.createElement('div');row.className='workout-item';
+  const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!checks[i];cb.id='workout-'+activeWorkout+'-'+i;
+  cb.addEventListener('change',()=>{data.workoutChecks[activeWorkout]=data.workoutChecks[activeWorkout]||{};data.workoutChecks[activeWorkout][i]=cb.checked;save();updateWorkoutProgress();});
+  const label=document.createElement('label');label.htmlFor=cb.id;
+  const name=document.createElement('b');name.textContent=item[0];
+  const meta=document.createElement('div');meta.className='workout-meta';meta.textContent=item[1];
+  label.append(name,meta);row.append(cb,label);host.appendChild(row);
+ });
+ updateWorkoutProgress();
+ renderWorkoutStats();
+}
+function updateWorkoutProgress(){
+ const plan=workoutPlans[activeWorkout],checks=data.workoutChecks[activeWorkout]||{};
+ const count=plan.items.filter((_,i)=>checks[i]).length;
+ document.getElementById('workoutProgress').textContent=count+' / '+plan.items.length+' Übungen erledigt';
+ document.getElementById('completeWorkout').disabled=count!==plan.items.length;
+}
+function renderWorkoutStats(){
+ const log=Array.isArray(data.workoutLog)?data.workoutLog:[];
+ const weekStart=new Date();weekStart.setHours(0,0,0,0);weekStart.setDate(weekStart.getDate()-((weekStart.getDay()+6)%7));
+ const recent=log.filter(x=>new Date(x.date)>=weekStart);
+ document.getElementById('workoutSessions').textContent=log.length;
+ document.getElementById('workoutMinutes').textContent=log.reduce((s,x)=>s+(x.minutes||0),0);
+ document.getElementById('workoutXp').textContent=log.reduce((s,x)=>s+(x.xp||0),0);
+ document.getElementById('workoutWeek').textContent=recent.length;
+ document.getElementById('workoutCount').textContent=log.length+' Einheiten erledigt';
+ const history=document.getElementById('workoutHistory');history.innerHTML='';
+ if(!log.length){history.textContent='Noch keine zusätzlichen Einheiten protokolliert.';return;}
+ log.slice(-5).reverse().forEach(x=>{const p=document.createElement('div');p.className='reward';const left=document.createElement('span');left.textContent=x.title+' · '+new Date(x.date).toLocaleDateString('de-DE');const right=document.createElement('b');right.className='green';right.textContent=x.minutes+' Min. · +'+x.xp+' XP';p.append(left,right);history.appendChild(p);});
+}
+document.querySelectorAll('[data-workout]').forEach(b=>b.addEventListener('click',()=>{activeWorkout=b.dataset.workout;renderWorkout();}));
+document.getElementById('completeWorkout').addEventListener('click',()=>{
+ const plan=workoutPlans[activeWorkout],checks=data.workoutChecks[activeWorkout]||{};
+ if(!plan.items.every((_,i)=>checks[i]))return;
+ if(!confirm('Einheit wirklich als erledigt speichern? Nur abschließen, wenn du sie tatsächlich gemacht hast.'))return;
+ data.workoutLog=data.workoutLog||[];
+ data.workoutLog.push({title:plan.title,date:new Date().toISOString(),minutes:plan.duration,xp:10});
+ data.xp+=10;
+ data.workoutChecks[activeWorkout]={};
+ save();render();renderWorkout();renderRewards();
+});
+
+if(Object.values(data.done).some(Boolean)&&!data.activeDays.includes(keyDate))data.activeDays.push(keyDate);
+save();render();renderRewards();
+
+function showAuth(user){
+  currentUser=user||null;
+  document.getElementById('authForm').hidden=!!user;
+  document.getElementById('signedInPanel').hidden=!user;
+  document.getElementById('authState').textContent=user?'Angemeldet':'Nicht angemeldet';
+  document.getElementById('signedInEmail').textContent=user?user.email:'';
+}
+async function loadProgress(user){
+  setStatus('Dein Cloud-Spielstand wird geladen …');
+  const {data:row,error}=await supabaseClient.from('life_os_progress').select('progress').eq('user_id',user.id).maybeSingle();
+  if(error){setStatus('Laden fehlgeschlagen: '+error.message,true);return;}
+  if(row&&row.progress){
+    applyingRemote=true;data={...data,...row.progress};if(!data.activeDays)data.activeDays=[];if(!Array.isArray(data.workoutLog))data.workoutLog=[];if(!data.workoutChecks)data.workoutChecks={};
+    if(data.day!==keyDate){data.day=keyDate;data.done={};data.training=false;data.dayStartXp=data.xp;}
+    localStorage.setItem('lifeOSv1',JSON.stringify(data));applyingRemote=false;
+    render();renderRewards();syncReady=true;setStatus('✓ Dein Spielstand wurde aus der Cloud geladen.');
+  }else{
+    syncReady=true;await uploadProgress();setStatus('✓ Konto verbunden. Dein bisheriger Spielstand wurde übernommen.');
+  }
+}
+async function initCloud(){
+  if(!window.supabase||!window.supabase.createClient){setStatus('Verbindung konnte nicht geladen werden. Bitte Seite neu laden.',true);return;}
+  if(SUPABASE_PUBLISHABLE_KEY==='HIER_DEIN_PUBLISHABLE_KEY_EINFUEGEN'||!SUPABASE_PUBLISHABLE_KEY.trim()){
+    setStatus('Noch nicht verbunden: Trage zuerst deinen Publishable Key in index.html ein.',true);return;
+  }
+  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  const {data:{session},error}=await supabaseClient.auth.getSession();
+  if(error){setStatus('Anmeldung konnte nicht geprüft werden: '+error.message,true);return;}
+  if(session){showAuth(session.user);await loadProgress(session.user);}
+  supabaseClient.auth.onAuthStateChange((event,session)=>{
+    setTimeout(async()=>{
+      if(session&&(!currentUser||currentUser.id!==session.user.id)){showAuth(session.user);syncReady=false;await loadProgress(session.user);}
+      else if(!session){showAuth(null);syncReady=false;setStatus('Abgemeldet. Auf diesem Gerät wird lokal weitergespeichert.');}
+    },0);
+  });
+}
+async function authAction(kind){
+  if(!supabaseClient){setStatus('Supabase ist noch nicht eingerichtet. Bitte zuerst den Publishable Key eintragen.',true);return;}
+  const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;
+  if(!email||!password){setStatus('Bitte E-Mail-Adresse und Passwort eintragen.',true);return;}
+  if(password.length<6){setStatus('Das Passwort muss mindestens 6 Zeichen haben.',true);return;}
+  setStatus(kind==='signup'?'Konto wird erstellt …':'Anmeldung läuft …');
+  const result=kind==='signup'
+    ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+window.location.pathname}})
+    : await supabaseClient.auth.signInWithPassword({email,password});
+  if(result.error){setStatus('Fehler: '+result.error.message,true);return;}
+  if(kind==='signup'&&!result.data.session){setStatus('Fast fertig! Bitte bestätige deine E-Mail über den Link in deinem Postfach. Danach kannst du dich hier anmelden.');return;}
+  if(result.data.user){showAuth(result.data.user);syncReady=false;await loadProgress(result.data.user);}
+}
+document.getElementById('signInBtn').addEventListener('click',()=>authAction('signin'));
+document.getElementById('signUpBtn').addEventListener('click',()=>authAction('signup'));
+document.getElementById('signOutBtn').addEventListener('click',async()=>{if(supabaseClient){const {error}=await supabaseClient.auth.signOut();if(error)setStatus('Abmelden fehlgeschlagen: '+error.message,true);else{showAuth(null);syncReady=false;setStatus('Abgemeldet. Deine lokalen Daten bleiben auf diesem Gerät erhalten.');}}});
+initCloud();
+</script>
+</body>
+</html>
