@@ -179,7 +179,7 @@ async function loadProgress(user){
 }
 async function initCloud(){
   if(!window.supabase||!window.supabase.createClient){setStatus('Verbindung konnte nicht geladen werden. Bitte Seite neu laden.',true);return;}
-  if(SUPABASE_PUBLISHABLE_KEY==='sb_publishable__y3MOo0Zn6JVA8R2tbJQ0A_MpqZgTOB'||!SUPABASE_PUBLISHABLE_KEY.trim()){
+  if (!SUPABASE_PUBLISHABLE_KEY.trim()) {
     setStatus('Noch nicht verbunden: Trage zuerst deinen Publishable Key in index.html ein.',true);return;
   }
   supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
